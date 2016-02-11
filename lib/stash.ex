@@ -1,5 +1,10 @@
 defmodule Stash do
   use Stash.Macros
+  @moduledoc """
+  This module provides a convenient interface around ETS/DTS without taking
+  large performance hits. Designed for being thrown into a project for basic
+  memory-based storage, perhaps with some form of persistence required.
+  """
 
   @doc """
   Retrieves a value from the cache.
