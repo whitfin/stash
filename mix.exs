@@ -25,7 +25,7 @@ defmodule Stash.Mixfile do
       },
       version: "1.0.0",
       elixir: "~> 1.1",
-      deps: deps,
+      deps: deps(),
       docs: [
         extras: [ "README.md" ],
         source_ref: "master",
