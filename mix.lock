@@ -1,14 +1,16 @@
-%{"benchfella": {:hex, :benchfella, "0.3.1"},
-  "benchwarmer": {:hex, :benchwarmer, "0.0.2"},
+%{
+  "benchfella": {:hex, :benchfella, "0.3.1", "3728b082725f27c46502c4609f78b8db01d4739932ebfc59f350b7a2b47d394d", [:mix], [], "hexpm"},
+  "benchwarmer": {:hex, :benchwarmer, "0.0.2", "902e5c020608647b07c38b82103e4af6d2667dfd5d5d13c67382238de6943136", [:mix], [], "hexpm"},
   "certifi": {:hex, :certifi, "0.3.0"},
-  "earmark": {:hex, :earmark, "0.2.1"},
-  "ex_doc": {:hex, :ex_doc, "0.11.4"},
+  "earmark": {:hex, :earmark, "0.2.1", "ba6d26ceb16106d069b289df66751734802777a3cbb6787026dd800ffeb850f3", [:mix], [], "hexpm"},
+  "ex_doc": {:hex, :ex_doc, "0.11.4", "a064bdb720594c3745b94709b17ffb834fd858b4e0c1f48f37c0d92700759e02", [:mix], [{:earmark, "~> 0.1.17 or ~> 0.2", [hex: :earmark, repo: "hexpm", optional: true]}], "hexpm"},
   "excoveralls": {:hex, :excoveralls, "0.4.6"},
   "exjsx": {:hex, :exjsx, "3.2.0"},
-  "exprintf": {:hex, :exprintf, "0.1.6"},
-  "exprof": {:hex, :exprof, "0.2.0"},
+  "exprintf": {:hex, :exprintf, "0.1.6", "b5b0a38bf78a357dbc61cdf7364fea004af6fdf5214be44021eb2ea7edf61f6e", [:mix], [], "hexpm"},
+  "exprof": {:hex, :exprof, "0.2.0", "b03f50d0d33e2f18c8e047d9188ba765dc32daba0b553ed717a98a78561d5eaf", [:mix], [{:exprintf, "~> 0.1", [hex: :exprintf, repo: "hexpm", optional: false]}], "hexpm"},
   "hackney": {:hex, :hackney, "1.4.8"},
   "idna": {:hex, :idna, "1.0.3"},
   "jsx": {:hex, :jsx, "2.6.2"},
   "mimerl": {:hex, :mimerl, "1.0.2"},
-  "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5"}}
+  "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5"},
+}

@@ -24,7 +24,7 @@ defmodule Stash.Mixfile do
         maintainers: [ "Isaac Whitfield" ]
       },
       version: "1.0.0",
-      elixir: "~> 1.1",
+      elixir: "~> 1.7",
       deps: deps(),
       docs: [
         extras: [ "README.md" ],
