@@ -234,6 +234,8 @@ defmodule Stash do
   """
   @spec load(atom, binary) :: atom
   deft load(cache, path) when is_binary(path) do
+    path = :binary.bin_to_list(path)
+
     case :dets.open_file(path, gen_dts_args(cache)) do
       { :ok, ^path } ->
         :dets.to_ets(path, cache)
@@ -253,6 +255,8 @@ defmodule Stash do
   """
   @spec persist(atom, binary) :: atom
   deft persist(cache, path) when is_binary(path) do
+    path = :binary.bin_to_list(path)
+
     case :dets.open_file(path, gen_dts_args(cache)) do
       { :ok, ^path } ->
         :dets.from_ets(path, cache)
