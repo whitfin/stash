@@ -63,6 +63,15 @@ defmodule Stash do
     :ets.insert(cache, { key, value })
   end
 
+  @spec getsert(atom, any, () -> any | any) :: any
+  deft getsert(cache, key, function) when is_function(function, 0) do
+    get(cache,  key) || set(cache, key, function.())
+  end
+
+  deft getsert(cache, key, value) do
+    get(cache,  key) || set(cache, key, value)
+  end
+
   @doc """
   Increments a key directly in the cache by `count`. If the key does not exist
   it is set to `initial` before **then** being incremented.
