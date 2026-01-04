@@ -65,7 +65,7 @@ iex(1)> Stash.get(:my_table, "key")
 "value"
 ```
 
-Again, very simple but it does this job:
+Again, very simple but it does the job :).
 
 ## Contributions
 
