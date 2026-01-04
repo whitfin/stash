@@ -2,7 +2,7 @@ defmodule Stash.Mixfile do
   use Mix.Project
 
   @url_docs "http://hexdocs.pm/stash"
-  @url_github "https://github.com/zackehh/stash"
+  @url_github "https://github.com/whitfin/stash"
 
   def project do
     [
@@ -30,6 +30,9 @@ defmodule Stash.Mixfile do
         extras: ["README.md"],
         source_ref: "master",
         source_url: @url_github
+      ],
+      test_coverage: [
+        tool: ExCoveralls
       ]
     ]
   end
@@ -52,7 +55,8 @@ defmodule Stash.Mixfile do
   defp deps do
     [
       {:eternal, "~> 1.2"},
-      {:ex_doc, "~> 0.29", optional: true, only: :docs}
+      {:ex_doc, "~> 0.29", optional: true, only: :docs},
+      {:excoveralls, "~> 0.18", optional: true, only: :cover}
     ]
   end
 end
