@@ -6,7 +6,7 @@ defmodule StashTest do
     value = 1
 
     assert Stash.get(:simple_get_put, key) == nil
-    assert Stash.set(:simple_get_put, key, value)
+    assert Stash.put(:simple_get_put, key, value)
     assert Stash.get(:simple_get_put, key) == 1
 
     assert Stash.get(:simple_get_get, key) == nil
@@ -17,13 +17,13 @@ defmodule StashTest do
     value = 1
 
     assert Stash.get(:simple_removal, key) == nil
-    assert Stash.set(:simple_removal, key, value)
+    assert Stash.put(:simple_removal, key, value)
     assert Stash.get(:simple_removal, key) == 1
 
     assert Stash.delete(:simple_removal, key)
     assert Stash.get(:simple_removal, key) == nil
 
-    assert Stash.set(:simple_removal, key, value)
+    assert Stash.put(:simple_removal, key, value)
     assert Stash.get(:simple_removal, key) == 1
 
     assert Stash.remove(:simple_removal, key) == value
@@ -35,7 +35,7 @@ defmodule StashTest do
     value = 1
 
     refute Stash.exists?(:simple_exists, key)
-    assert Stash.set(:simple_exists, key, value)
+    assert Stash.put(:simple_exists, key, value)
     assert Stash.exists?(:simple_exists, key)
   end
 
@@ -43,7 +43,7 @@ defmodule StashTest do
     key = "one"
     key2 = "two"
 
-    assert Stash.set(:simple_increment, key, 1)
+    assert Stash.put(:simple_increment, key, 1)
 
     assert Stash.inc(:simple_increment, key) == 2
     assert Stash.inc(:simple_increment, key, 2) == 4
@@ -58,7 +58,7 @@ defmodule StashTest do
     assert Stash.empty?(:simple_sizing)
     assert Stash.size(:simple_sizing) == 0
 
-    assert Stash.set(:simple_sizing, key, value)
+    assert Stash.put(:simple_sizing, key, value)
     assert Stash.get(:simple_sizing, key) == 1
 
     refute Stash.empty?(:simple_sizing)
@@ -69,9 +69,9 @@ defmodule StashTest do
   end
 
   test "checking namespace keys" do
-    assert Stash.set(:simple_keys, 1, 1)
-    assert Stash.set(:simple_keys, 2, 2)
-    assert Stash.set(:simple_keys, 3, 3)
+    assert Stash.put(:simple_keys, 1, 1)
+    assert Stash.put(:simple_keys, 2, 2)
+    assert Stash.put(:simple_keys, 3, 3)
 
     assert Enum.sort(Stash.keys(:simple_keys)) == [1, 2, 3]
   end
@@ -81,7 +81,7 @@ defmodule StashTest do
     assert Stash.empty?(:simple_persistence)
 
     Enum.each(1..5, fn x ->
-      assert Stash.set(:simple_persistence, "key#{x}", "value#{x}")
+      assert Stash.put(:simple_persistence, "key#{x}", "value#{x}")
     end)
 
     assert Stash.size(:simple_persistence) == 5

@@ -22,7 +22,7 @@ end
 It's straightforward to get up and running quickly, just populate a namespace:
 
 ```elixir
-iex(1)> Stash.set(:namespace, "my_key", "my_value")
+iex(1)> Stash.put(:namespace, "my_key", "my_value")
 true
 iex(2)> Stash.get(:namespace, "my_key")
 "my_value"
@@ -47,7 +47,7 @@ reload after your process has died. This is not synced in any way; call `Stash.p
 if this is required.
 
 ```elixir
-iex(1)> Stash.set(:my_table, "key", "value")
+iex(1)> Stash.put(:my_table, "key", "value")
 true
 iex(2)> Stash.size(:my_table)
 1

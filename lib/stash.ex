@@ -57,16 +57,16 @@ defmodule Stash do
   end
 
   @doc """
-  Sets a value in the namespace against a given key.
+  Places a value in the namespace against a given key.
 
   ## Examples
 
-      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.put(:my_namespace, "key", "value")
       true
 
   """
-  @spec set(atom(), any(), any()) :: true
-  def set(namespace, key, value),
+  @spec put(atom(), any(), any()) :: true
+  def put(namespace, key, value),
     do: :ets.insert(:"$stash", {{namespace, key}, value})
 
   @doc """
