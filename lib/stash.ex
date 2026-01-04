@@ -6,11 +6,123 @@ defmodule Stash do
   """
 
   @doc """
+  Removes a value from the namespace.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key", "value")
+      iex> Stash.get(:my_namespace, "key")
+      "value"
+
+      iex> Stash.delete(:my_namespace, "key")
+      true
+
+      iex> Stash.get(:my_namespace, "key")
+      nil
+
+  """
+  @spec delete(atom(), any()) :: true
+  def delete(namespace, key),
+    do: :ets.delete(:"$stash", {namespace, key})
+
+  @doc """
+  Removes all items from all namespaces.
+
+  ## Examples
+
+      iex> Stash.put(:namespace1, "key1", "value1")
+      iex> Stash.put(:namespace2, "key2", "value2")
+      iex> Stash.put(:namespace3, "key3", "value3")
+
+      iex> Stash.clear()
+      true
+
+      iex> Stash.size(:namespace1)
+      0
+
+      iex> Stash.size(:namespace2)
+      0
+
+      iex> Stash.size(:namespace3)
+      0
+
+  """
+  @spec clear() :: true
+  def clear(),
+    do: :ets.delete_all_objects(:"$stash")
+
+  @doc """
+  Removes all items from a namespace.
+
+  ## Examples
+
+      iex> Stash.put(:namespace, "key1", "value1")
+      iex> Stash.put(:namespace, "key2", "value2")
+      iex> Stash.put(:namespace, "key3", "value3")
+
+      iex> Stash.drop(:namespace)
+      true
+
+      iex> Stash.size(:namespace)
+      0
+
+  """
+  @spec drop(atom()) :: true
+  def drop(namespace),
+    do:
+      :ets.select_delete(:"$stash", [
+        {{{namespace, :_}, :_}, [], [true]}
+      ])
+
+  @doc """
+  Checks whether the namespace is empty.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key1", "value1")
+      iex> Stash.put(:my_namespace, "key2", "value2")
+      iex> Stash.put(:my_namespace, "key3", "value3")
+      iex> Stash.empty?(:my_namespace)
+      false
+
+      iex> Stash.clear(:my_namespace)
+      true
+
+      iex> Stash.empty?(:my_namespace)
+      true
+
+  """
+  @spec empty?(atom()) :: boolean()
+  def empty?(namespace),
+    do: size(namespace) == 0
+
+  @doc """
+  Determines whether a given key exists inside the namespace.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key", "value")
+      iex> Stash.exists?(:my_namespace, "key")
+      true
+
+      iex> Stash.exists?(:my_namespace, "missing_key")
+      false
+
+  """
+  @spec exists?(atom, any) :: true | false
+  def exists?(namespace, key) do
+    case :ets.lookup(:"$stash", {namespace, key}) do
+      [{{^namespace, ^key}, _value}] -> true
+      _unrecognised_val -> false
+    end
+  end
+
+  @doc """
   Retrieves a value from the namespace.
 
   ## Examples
 
-      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.put(:my_namespace, "key", "value")
       iex> Stash.get(:my_namespace, "key")
       "value"
 
@@ -32,7 +144,7 @@ defmodule Stash do
 
   ## Examples
 
-      iex> Stash.set(:my_namespace, "key", 1)
+      iex> Stash.put(:my_namespace, "key", 1)
       iex> Stash.increment(:my_namespace, "key")
       2
 
@@ -58,13 +170,29 @@ defmodule Stash do
         )
 
   @doc """
+  Returns information about the backing ETS table.
+
+  ## Examples
+
+      iex> Stash.info()
+      [read_concurrency: true, write_concurrency: true, compressed: false,
+       memory: 1361, owner: #PID<0.126.0>, heir: :none, name: :my_namespace, size: 2,
+       node: :nonode@nohost, named_table: true, type: :set, keypos: 1,
+       protection: :public]
+
+  """
+  @spec info() :: [{atom(), any()}]
+  def info(),
+    do: :ets.info(:"$stash")
+
+  @doc """
   Retrieves all keys from the namespace, and returns them as an (unordered) list.
 
   ## Examples
 
-      iex> Stash.set(:my_namespace, "key1", "value1")
-      iex> Stash.set(:my_namespace, "key2", "value2")
-      iex> Stash.set(:my_namespace, "key3", "value3")
+      iex> Stash.put(:my_namespace, "key1", "value1")
+      iex> Stash.put(:my_namespace, "key2", "value2")
+      iex> Stash.put(:my_namespace, "key3", "value3")
       iex> Stash.keys(:my_namespace)
       [ "key2", "key1", "key3" ]
 
@@ -86,171 +214,6 @@ defmodule Stash do
       :"$stash"
     )
   end
-
-  @doc """
-  Places a value in the namespace against a given key.
-
-  ## Examples
-
-      iex> Stash.put(:my_namespace, "key", "value")
-      true
-
-  """
-  @spec put(atom(), any(), any()) :: true
-  def put(namespace, key, value),
-    do: :ets.insert(:"$stash", {{namespace, key}, value})
-
-  @doc """
-  Removes a value from the namespace.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key", "value")
-      iex> Stash.get(:my_namespace, "key")
-      "value"
-
-      iex> Stash.delete(:my_namespace, "key")
-      true
-
-      iex> Stash.get(:my_namespace, "key")
-      nil
-
-  """
-  @spec delete(atom(), any()) :: true
-  def delete(namespace, key) do
-    :ets.delete(:"$stash", {namespace, key})
-  end
-
-  @doc """
-  Removes a key from the namespace, whilst also returning the last known value.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key", "value")
-      iex> Stash.remove(:my_namespace, "key")
-      "value"
-
-      iex> Stash.get(:my_namespace, "key")
-      nil
-
-      iex> Stash.remove(:my_namespace, "missing_key")
-      nil
-
-  """
-  @spec remove(atom(), any()) :: any()
-  def remove(namespace, key) do
-    case :ets.take(:"$stash", {namespace, key}) do
-      [{{^namespace, ^key}, value}] -> value
-      _unrecognised_val -> nil
-    end
-  end
-
-  @doc """
-  Removes all items in the namespace.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key1", "value1")
-      iex> Stash.set(:my_namespace, "key2", "value2")
-      iex> Stash.set(:my_namespace, "key3", "value3")
-      iex> Stash.size(:my_namespace)
-      3
-
-      iex> Stash.clear(:my_namespace)
-      true
-
-      iex> Stash.size(:my_namespace)
-      0
-
-  """
-  @spec drop(atom) :: true
-  def drop(namespace),
-    do:
-      :ets.select_delete(:"$stash", [
-        {{{namespace, :_}, :_}, [], [true]}
-      ])
-
-  @spec clear() :: true
-  def clear(),
-    do: :ets.delete_all_objects(:"$stash")
-
-  @doc """
-  Checks whether the namespace is empty.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key1", "value1")
-      iex> Stash.set(:my_namespace, "key2", "value2")
-      iex> Stash.set(:my_namespace, "key3", "value3")
-      iex> Stash.empty?(:my_namespace)
-      false
-
-      iex> Stash.clear(:my_namespace)
-      true
-
-      iex> Stash.empty?(:my_namespace)
-      true
-
-  """
-  @spec empty?(atom()) :: boolean()
-  def empty?(namespace),
-    do: size(namespace) == 0
-
-  @doc """
-  Determines whether a given key exists inside the namespace.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key", "value")
-      iex> Stash.exists?(:my_namespace, "key")
-      true
-
-      iex> Stash.exists?(:my_namespace, "missing_key")
-      false
-
-  """
-  @spec exists?(atom, any) :: true | false
-  def exists?(namespace, key) do
-    case :ets.lookup(:"$stash", {namespace, key}) do
-      [{{^namespace, ^key}, _value}] -> true
-      _unrecognised_val -> false
-    end
-  end
-
-  @doc """
-  Determines the size of the namespace.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key1", "value1")
-      iex> Stash.set(:my_namespace, "key2", "value2")
-      iex> Stash.set(:my_namespace, "key3", "value3")
-      iex> Stash.size(:my_namespace)
-      3
-
-  """
-  @spec size(atom) :: number
-  def size(namespace),
-    do:
-      :ets.select_count(:"$stash", [
-        {{{namespace, :_}, :_}, [], [true]}
-      ])
-
-  @doc """
-  Returns information about the backing ETS table.
-
-  ## Examples
-
-      iex> Stash.info()
-      [read_concurrency: true, write_concurrency: true, compressed: false,
-       memory: 1361, owner: #PID<0.126.0>, heir: :none, name: :my_namespace, size: 2,
-       node: :nonode@nohost, named_table: true, type: :set, keypos: 1,
-       protection: :public]
-
-  """
-  @spec info() :: [{atom(), any()}]
-  def info(),
-    do: :ets.info(:"$stash")
 
   @doc """
   Loads a namespace into memory from DTS storage.
@@ -292,9 +255,63 @@ defmodule Stash do
     end
   end
 
-  # Generates the arguments for a DTS table based on a passed in ETS table
-  defp gen_dts_args() do
-    info = info()
-    [keypos: info[:keypos], type: info[:type]]
+  @doc """
+  Places a value in the namespace against a given key.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key", "value")
+      true
+
+  """
+  @spec put(atom(), any(), any()) :: true
+  def put(namespace, key, value),
+    do: :ets.insert(:"$stash", {{namespace, key}, value})
+
+  @doc """
+  Removes a key from the namespace, whilst also returning the last known value.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key", "value")
+      iex> Stash.remove(:my_namespace, "key")
+      "value"
+
+      iex> Stash.get(:my_namespace, "key")
+      nil
+
+      iex> Stash.remove(:my_namespace, "missing_key")
+      nil
+
+  """
+  @spec remove(atom(), any()) :: any()
+  def remove(namespace, key) do
+    case :ets.take(:"$stash", {namespace, key}) do
+      [{{^namespace, ^key}, value}] -> value
+      _unrecognised_val -> nil
+    end
   end
+
+  @doc """
+  Determines the size of the namespace.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key1", "value1")
+      iex> Stash.put(:my_namespace, "key2", "value2")
+      iex> Stash.put(:my_namespace, "key3", "value3")
+      iex> Stash.size(:my_namespace)
+      3
+
+  """
+  @spec size(atom) :: number
+  def size(namespace),
+    do:
+      :ets.select_count(:"$stash", [
+        {{{namespace, :_}, :_}, [], [true]}
+      ])
+
+  # Generates the arguments for a DTS table.
+  defp gen_dts_args(),
+    do: [keypos: info()[:keypos], type: info()[:type]]
 end
