@@ -200,19 +200,19 @@ defmodule Stash do
 
   """
   @spec keys(atom()) :: [any()]
-  def keys(namespace) do
-    :ets.foldr(
-      fn
-        {{^namespace, key}, _value}, keys ->
-          [key | keys]
+  def keys(namespace),
+    do:
+      :ets.foldr(
+        fn
+          {{^namespace, key}, _value}, keys ->
+            [key | keys]
 
-        _other, keys ->
-          keys
-      end,
-      [],
-      :"$stash"
-    )
-  end
+          _other, keys ->
+            keys
+        end,
+        [],
+        :"$stash"
+      )
 
   @doc """
   Loads a namespace into memory from DTS storage.
@@ -282,12 +282,15 @@ defmodule Stash do
       iex> Stash.remove(:my_namespace, "missing_key")
       nil
 
+      iex> Stash.remove(:my_namespace, "missing_key, "default")
+      "default"
+
   """
-  @spec remove(atom(), any()) :: any()
-  def remove(namespace, key) do
+  @spec remove(atom(), any(), any()) :: any()
+  def remove(namespace, key, default \\ nil) do
     case :ets.take(:"$stash", {namespace, key}) do
       [{{^namespace, ^key}, value}] -> value
-      _unrecognised_val -> nil
+      _unrecognised -> default
     end
   end
 
