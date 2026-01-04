@@ -45,10 +45,10 @@ defmodule StashTest do
 
     assert Stash.put(:simple_increment, key, 1)
 
-    assert Stash.inc(:simple_increment, key) == 2
-    assert Stash.inc(:simple_increment, key, 2) == 4
+    assert Stash.increment(:simple_increment, key) == 2
+    assert Stash.increment(:simple_increment, key, 2) == 4
 
-    assert Stash.inc(:simple_increment, key2, 5, 5) == 10
+    assert Stash.increment(:simple_increment, key2, 5, 5) == 10
   end
 
   test "checking namespace sizes" do

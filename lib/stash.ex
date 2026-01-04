@@ -27,6 +27,37 @@ defmodule Stash do
   end
 
   @doc """
+  Increments a key directly in the namespace by `count`. If the key does not exist
+  it is set to `initial` before **then** being incremented.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key", 1)
+      iex> Stash.increment(:my_namespace, "key")
+      2
+
+      iex> Stash.increment(:my_namespace, "key", 2)
+      4
+
+      iex> Stash.increment(:my_namespace, "missing_key", 1)
+      1
+
+      iex> Stash.increment(:my_namespace, "a_missing_key", 1, 5)
+      6
+
+  """
+  @spec increment(atom(), any(), number(), number()) :: number()
+  def increment(namespace, key, count \\ 1, initial \\ 0)
+      when is_number(count) and is_number(initial),
+      do:
+        :ets.update_counter(
+          :"$stash",
+          {namespace, key},
+          {2, count},
+          {key, initial}
+        )
+
+  @doc """
   Retrieves all keys from the namespace, and returns them as an (unordered) list.
 
   ## Examples
@@ -68,36 +99,6 @@ defmodule Stash do
   @spec put(atom(), any(), any()) :: true
   def put(namespace, key, value),
     do: :ets.insert(:"$stash", {{namespace, key}, value})
-
-  @doc """
-  Increments a key directly in the namespace by `count`. If the key does not exist
-  it is set to `initial` before **then** being incremented.
-
-  ## Examples
-
-      iex> Stash.set(:my_namespace, "key", 1)
-      iex> Stash.inc(:my_namespace, "key")
-      2
-
-      iex> Stash.inc(:my_namespace, "key", 2)
-      4
-
-      iex> Stash.inc(:my_namespace, "missing_key", 1)
-      1
-
-      iex> Stash.inc(:my_namespace, "a_missing_key", 1, 5)
-      6
-
-  """
-  @spec inc(atom(), any(), number(), number()) :: number()
-  def inc(namespace, key, count \\ 1, initial \\ 0) when is_number(count) and is_number(initial),
-    do:
-      :ets.update_counter(
-        :"$stash",
-        {namespace, key},
-        {2, count},
-        {key, initial}
-      )
 
   @doc """
   Removes a value from the namespace.
