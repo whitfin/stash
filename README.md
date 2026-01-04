@@ -13,7 +13,7 @@ This package can be installed via Hex, just add stash to your list of dependenci
 
 ```elixir
 def deps do
-  [{:stash, "~> 1.0"}]
+  [{:stash, "~> 2.0"}]
 end
 ```
 

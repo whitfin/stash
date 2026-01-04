@@ -23,7 +23,7 @@ defmodule Stash.Mixfile do
         },
         maintainers: ["Isaac Whitfield"]
       },
-      version: "1.0.0",
+      version: "2.0.0",
       elixir: "~> 1.7",
       deps: deps(),
       docs: [
