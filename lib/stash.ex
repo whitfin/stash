@@ -6,26 +6,6 @@ defmodule Stash do
   """
 
   @doc """
-  Removes a value from the namespace.
-
-  ## Examples
-
-      iex> Stash.put(:my_namespace, "key", "value")
-      iex> Stash.get(:my_namespace, "key")
-      "value"
-
-      iex> Stash.delete(:my_namespace, "key")
-      true
-
-      iex> Stash.get(:my_namespace, "key")
-      nil
-
-  """
-  @spec delete(atom(), any()) :: true
-  def delete(namespace, key),
-    do: :ets.delete(:"$stash", {namespace, key})
-
-  @doc """
   Removes all items from all namespaces.
 
   ## Examples
@@ -50,6 +30,26 @@ defmodule Stash do
   @spec clear() :: true
   def clear(),
     do: :ets.delete_all_objects(:"$stash")
+
+  @doc """
+  Removes a value from the namespace.
+
+  ## Examples
+
+      iex> Stash.put(:my_namespace, "key", "value")
+      iex> Stash.get(:my_namespace, "key")
+      "value"
+
+      iex> Stash.delete(:my_namespace, "key")
+      true
+
+      iex> Stash.get(:my_namespace, "key")
+      nil
+
+  """
+  @spec delete(atom(), any()) :: true
+  def delete(namespace, key),
+    do: :ets.delete(:"$stash", {namespace, key})
 
   @doc """
   Removes all items from a namespace.
@@ -110,12 +110,8 @@ defmodule Stash do
 
   """
   @spec exists?(atom, any) :: true | false
-  def exists?(namespace, key) do
-    case :ets.lookup(:"$stash", {namespace, key}) do
-      [{{^namespace, ^key}, _value}] -> true
-      _unrecognised_val -> false
-    end
-  end
+  def exists?(namespace, key),
+    do: get(namespace, key, :"$exists") != :"$exists"
 
   @doc """
   Retrieves a value from the namespace.
@@ -129,12 +125,15 @@ defmodule Stash do
       iex> Stash.get(:my_namespace, "missing_key")
       nil
 
+      iex> Stash.get(:my_namespace, "missing_key, "default")
+      "default
+
   """
-  @spec get(atom(), any()) :: any()
-  def get(namespace, key) do
+  @spec get(atom(), any(), any()) :: any()
+  def get(namespace, key, default \\ nil) do
     case :ets.lookup(:"$stash", {namespace, key}) do
       [{{^namespace, ^key}, value}] -> value
-      _unrecognised_val -> nil
+      _unrecognised -> default
     end
   end
 
