@@ -1,5 +1,4 @@
 defmodule Stash do
-  use Stash.Macros
   @moduledoc """
   This module provides a convenient interface around ETS/DTS without taking
   large performance hits. Designed for being thrown into a project for basic
@@ -7,264 +6,294 @@ defmodule Stash do
   """
 
   @doc """
-  Retrieves a value from the cache.
+  Retrieves a value from the namespace.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key", "value")
-      iex> Stash.get(:my_cache, "key")
+      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.get(:my_namespace, "key")
       "value"
 
-      iex> Stash.get(:my_cache, "missing_key")
+      iex> Stash.get(:my_namespace, "missing_key")
       nil
 
   """
-  @spec get(atom, any) :: any
-  deft get(cache, key) do
-    case :ets.lookup(cache, key) do
-      [{ ^key, value }] -> value
+  @spec get(atom(), any()) :: any()
+  def get(namespace, key) do
+    case :ets.lookup(:"$stash", {namespace, key}) do
+      [{{^namespace, ^key}, value}] -> value
       _unrecognised_val -> nil
     end
   end
 
   @doc """
-  Retrieves all keys from the cache, and returns them as an (unordered) list.
+  Retrieves all keys from the namespace, and returns them as an (unordered) list.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key1", "value1")
-      iex> Stash.set(:my_cache, "key2", "value2")
-      iex> Stash.set(:my_cache, "key3", "value3")
-      iex> Stash.keys(:my_cache)
+      iex> Stash.set(:my_namespace, "key1", "value1")
+      iex> Stash.set(:my_namespace, "key2", "value2")
+      iex> Stash.set(:my_namespace, "key3", "value3")
+      iex> Stash.keys(:my_namespace)
       [ "key2", "key1", "key3" ]
 
-      iex> Stash.keys(:empty_cache)
+      iex> Stash.keys(:empty_namespace)
       []
 
   """
-  @spec keys(atom) :: [any]
-  deft keys(cache) do
-    :ets.foldr(fn({ key, _value }, keys) ->
-      [key|keys]
-    end, [], cache)
-  end
+  @spec keys(atom()) :: [any()]
+  def keys(namespace) do
+    :ets.foldr(
+      fn
+        {{^namespace, key}, _value}, keys ->
+          [key | keys]
 
-  @doc """
-  Sets a value in the cache against a given key.
-
-  ## Examples
-
-      iex> Stash.set(:my_cache, "key", "value")
-      true
-
-  """
-  @spec set(atom, any, any) :: true
-  deft set(cache, key, value) do
-    :ets.insert(cache, { key, value })
-  end
-
-  @doc """
-  Increments a key directly in the cache by `count`. If the key does not exist
-  it is set to `initial` before **then** being incremented.
-
-  ## Examples
-
-      iex> Stash.set(:my_cache, "key", 1)
-      iex> Stash.inc(:my_cache, "key")
-      2
-
-      iex> Stash.inc(:my_cache, "key", 2)
-      4
-
-      iex> Stash.inc(:my_cache, "missing_key", 1)
-      1
-
-      iex> Stash.inc(:my_cache, "a_missing_key", 1, 5)
-      6
-
-  """
-  @spec inc(atom, any, number, number) :: number
-  def inc(cache, key, count \\ 1, initial \\ 0)
-  deft inc(cache, key, count, initial)
-  when is_number(count) and is_number(initial) do
-    :ets.update_counter(
-      cache, key, { 2, count }, { key, initial }
+        _other, keys ->
+          keys
+      end,
+      [],
+      :"$stash"
     )
   end
 
   @doc """
-  Removes a value from the cache.
+  Sets a value in the namespace against a given key.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key", "value")
-      iex> Stash.get(:my_cache, "key")
-      "value"
-
-      iex> Stash.delete(:my_cache, "key")
+      iex> Stash.set(:my_namespace, "key", "value")
       true
 
-      iex> Stash.get(:my_cache, "key")
-      nil
-
   """
-  @spec delete(atom, any) :: true
-  deft delete(cache, key), do: :ets.delete(cache, key)
+  @spec set(atom(), any(), any()) :: true
+  def set(namespace, key, value),
+    do: :ets.insert(:"$stash", {{namespace, key}, value})
 
   @doc """
-  Removes a key from the cache, whilst also returning the last known value.
+  Increments a key directly in the namespace by `count`. If the key does not exist
+  it is set to `initial` before **then** being incremented.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key", "value")
-      iex> Stash.remove(:my_cache, "key")
+      iex> Stash.set(:my_namespace, "key", 1)
+      iex> Stash.inc(:my_namespace, "key")
+      2
+
+      iex> Stash.inc(:my_namespace, "key", 2)
+      4
+
+      iex> Stash.inc(:my_namespace, "missing_key", 1)
+      1
+
+      iex> Stash.inc(:my_namespace, "a_missing_key", 1, 5)
+      6
+
+  """
+  @spec inc(atom(), any(), number(), number()) :: number()
+  def inc(namespace, key, count \\ 1, initial \\ 0) when is_number(count) and is_number(initial),
+    do:
+      :ets.update_counter(
+        :"$stash",
+        {namespace, key},
+        {2, count},
+        {key, initial}
+      )
+
+  @doc """
+  Removes a value from the namespace.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.get(:my_namespace, "key")
       "value"
 
-      iex> Stash.get(:my_cache, "key")
-      nil
+      iex> Stash.delete(:my_namespace, "key")
+      true
 
-      iex> Stash.remove(:my_cache, "missing_key")
+      iex> Stash.get(:my_namespace, "key")
       nil
 
   """
-  @spec remove(atom, any) :: any
-  deft remove(cache, key) do
-    case :ets.take(cache, key) do
-      [{ ^key, value }] -> value
+  @spec delete(atom(), any()) :: true
+  def delete(namespace, key) do
+    :ets.delete(:"$stash", {namespace, key})
+  end
+
+  @doc """
+  Removes a key from the namespace, whilst also returning the last known value.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.remove(:my_namespace, "key")
+      "value"
+
+      iex> Stash.get(:my_namespace, "key")
+      nil
+
+      iex> Stash.remove(:my_namespace, "missing_key")
+      nil
+
+  """
+  @spec remove(atom(), any()) :: any()
+  def remove(namespace, key) do
+    case :ets.take(:"$stash", {namespace, key}) do
+      [{{^namespace, ^key}, value}] -> value
       _unrecognised_val -> nil
     end
   end
 
   @doc """
-  Removes all items in the cache.
+  Removes all items in the namespace.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key1", "value1")
-      iex> Stash.set(:my_cache, "key2", "value2")
-      iex> Stash.set(:my_cache, "key3", "value3")
-      iex> Stash.size(:my_cache)
+      iex> Stash.set(:my_namespace, "key1", "value1")
+      iex> Stash.set(:my_namespace, "key2", "value2")
+      iex> Stash.set(:my_namespace, "key3", "value3")
+      iex> Stash.size(:my_namespace)
       3
 
-      iex> Stash.clear(:my_cache)
+      iex> Stash.clear(:my_namespace)
       true
 
-      iex> Stash.size(:my_cache)
+      iex> Stash.size(:my_namespace)
       0
 
   """
-  @spec clear(atom) :: true
-  deft clear(cache), do: :ets.delete_all_objects(cache)
+  @spec drop(atom) :: true
+  def drop(namespace),
+    do:
+      :ets.select_delete(:"$stash", [
+        {{{namespace, :_}, :_}, [], [true]}
+      ])
+
+  @spec clear() :: true
+  def clear(),
+    do: :ets.delete_all_objects(:"$stash")
+
+  @doc """
+  Checks whether the namespace is empty.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key1", "value1")
+      iex> Stash.set(:my_namespace, "key2", "value2")
+      iex> Stash.set(:my_namespace, "key3", "value3")
+      iex> Stash.empty?(:my_namespace)
+      false
+
+      iex> Stash.clear(:my_namespace)
+      true
+
+      iex> Stash.empty?(:my_namespace)
+      true
+
+  """
+  @spec empty?(atom()) :: boolean()
+  def empty?(namespace),
+    do: size(namespace) == 0
+
+  @doc """
+  Determines whether a given key exists inside the namespace.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key", "value")
+      iex> Stash.exists?(:my_namespace, "key")
+      true
+
+      iex> Stash.exists?(:my_namespace, "missing_key")
+      false
+
+  """
+  @spec exists?(atom, any) :: true | false
+  def exists?(namespace, key) do
+    case :ets.lookup(:"$stash", {namespace, key}) do
+      [{{^namespace, ^key}, _value}] -> true
+      _unrecognised_val -> false
+    end
+  end
+
+  @doc """
+  Determines the size of the namespace.
+
+  ## Examples
+
+      iex> Stash.set(:my_namespace, "key1", "value1")
+      iex> Stash.set(:my_namespace, "key2", "value2")
+      iex> Stash.set(:my_namespace, "key3", "value3")
+      iex> Stash.size(:my_namespace)
+      3
+
+  """
+  @spec size(atom) :: number
+  def size(namespace),
+    do:
+      :ets.select_count(:"$stash", [
+        {{{namespace, :_}, :_}, [], [true]}
+      ])
 
   @doc """
   Returns information about the backing ETS table.
 
   ## Examples
 
-      iex> Stash.info(:my_cache)
+      iex> Stash.info()
       [read_concurrency: true, write_concurrency: true, compressed: false,
-       memory: 1361, owner: #PID<0.126.0>, heir: :none, name: :my_cache, size: 2,
+       memory: 1361, owner: #PID<0.126.0>, heir: :none, name: :my_namespace, size: 2,
        node: :nonode@nohost, named_table: true, type: :set, keypos: 1,
        protection: :public]
 
   """
-  @spec info(atom) :: [ { atom, any } ]
-  deft info(cache), do: :ets.info(cache)
+  @spec info() :: [{atom(), any()}]
+  def info(),
+    do: :ets.info(:"$stash")
 
   @doc """
-  Checks whether the cache is empty.
+  Loads a namespace into memory from DTS storage.
 
   ## Examples
 
-      iex> Stash.set(:my_cache, "key1", "value1")
-      iex> Stash.set(:my_cache, "key2", "value2")
-      iex> Stash.set(:my_cache, "key3", "value3")
-      iex> Stash.empty?(:my_cache)
-      false
-
-      iex> Stash.clear(:my_cache)
-      true
-
-      iex> Stash.empty?(:my_cache)
-      true
-
-  """
-  @spec empty?(atom) :: true | false
-  deft empty?(cache), do: size(cache) == 0
-
-  @doc """
-  Determines whether a given key exists inside the cache.
-
-  ## Examples
-
-      iex> Stash.set(:my_cache, "key", "value")
-      iex> Stash.exists?(:my_cache, "key")
-      true
-
-      iex> Stash.exists?(:my_cache, "missing_key")
-      false
-
-  """
-  @spec exists?(atom, any) :: true | false
-  deft exists?(cache, key), do: :ets.member(cache, key)
-
-  @doc """
-  Determines the size of the cache.
-
-  ## Examples
-
-      iex> Stash.set(:my_cache, "key1", "value1")
-      iex> Stash.set(:my_cache, "key2", "value2")
-      iex> Stash.set(:my_cache, "key3", "value3")
-      iex> Stash.size(:my_cache)
-      3
-
-  """
-  @spec size(atom) :: number
-  deft size(cache), do: info(cache)[:size]
-
-  @doc """
-  Loads a cache into memory from DTS storage.
-
-  ## Examples
-
-      iex> Stash.load(:my_cache, "/tmp/temporary.dat")
+      iex> Stash.load("/tmp/temporary.dat")
       :ok
 
   """
-  @spec load(atom, binary) :: atom
-  deft load(cache, path) when is_binary(path) do
-    case :dets.open_file(path, gen_dts_args(cache)) do
-      { :ok, ^path } ->
-        :dets.to_ets(path, cache)
-        :dets.close(path)
-      error_state -> error_state
+  @spec load(binary()) :: atom()
+  def load(path) when is_binary(path) do
+    args = gen_dts_args()
+    path = :binary.bin_to_list(path)
+
+    with {:ok, ^path} <- :dets.open_file(path, args) do
+      :dets.to_ets(path, :"$stash")
+      :dets.close(path)
     end
   end
 
   @doc """
-  Persists a cache onto disk to allow reload after the process dies.
+  Persists a namespace onto disk to allow reload after the process dies.
 
   ## Examples
 
-      iex> Stash.persist(:my_cache, "/tmp/temporary.dat")
+      iex> Stash.persist(:my_namespace, "/tmp/temporary.dat")
       :ok
 
   """
-  @spec persist(atom, binary) :: atom
-  deft persist(cache, path) when is_binary(path) do
-    case :dets.open_file(path, gen_dts_args(cache)) do
-      { :ok, ^path } ->
-        :dets.from_ets(path, cache)
-        :dets.close(path)
-      error_state -> error_state
+  @spec persist(binary()) :: atom()
+  def persist(path) when is_binary(path) do
+    args = gen_dts_args()
+    path = :binary.bin_to_list(path)
+
+    with {:ok, ^path} <- :dets.open_file(path, args) do
+      :dets.from_ets(path, :"$stash")
+      :dets.close(path)
     end
   end
 
   # Generates the arguments for a DTS table based on a passed in ETS table
-  defp gen_dts_args(cache) do
-    info = info(cache)
-    [ keypos: info[:keypos], type: info[:type] ]
+  defp gen_dts_args() do
+    info = info()
+    [keypos: info[:keypos], type: info[:type]]
   end
-
 end

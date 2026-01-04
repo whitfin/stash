@@ -1,97 +1,96 @@
 defmodule StashTest do
   use ExUnit.Case
 
-  @test_cache :my_test_cache
-  @test_file "/tmp/stash_test_file"
+  test "simple getting and putting of keys" do
+    key = "one"
+    value = 1
 
-  setup do
-    Stash.clear(@test_cache)
-    Enum.each(1..1000, fn(x) ->
-      Stash.set(@test_cache, "key#{x}", "value#{x}")
-    end)
-    File.rm_rf!(@test_file)
-    :ok
+    assert Stash.get(:simple_get_put, key) == nil
+    assert Stash.set(:simple_get_put, key, value)
+    assert Stash.get(:simple_get_put, key) == 1
+
+    assert Stash.get(:simple_get_get, key) == nil
   end
 
-  test "deft macro cannot accept non-atom caches" do
-    assert_raise ArgumentError, "Invalid ETS table name provided, got: \"test\"", fn ->
-      Stash.get("test", "key")
-    end
+  test "simple removal of keys" do
+    key = "one"
+    value = 1
+
+    assert Stash.get(:simple_removal, key) == nil
+    assert Stash.set(:simple_removal, key, value)
+    assert Stash.get(:simple_removal, key) == 1
+
+    assert Stash.delete(:simple_removal, key)
+    assert Stash.get(:simple_removal, key) == nil
+
+    assert Stash.set(:simple_removal, key, value)
+    assert Stash.get(:simple_removal, key) == 1
+
+    assert Stash.remove(:simple_removal, key) == value
+    assert Stash.get(:simple_removal, key) == nil
   end
 
-  test "test specific key retrieval" do
-    Enum.each(1..1000, fn(x) ->
-      assert(Stash.get(@test_cache, "key#{x}") == "value#{x}")
-    end)
+  test "simple key existence" do
+    key = "one"
+    value = 1
+
+    refute Stash.exists?(:simple_exists, key)
+    assert Stash.set(:simple_exists, key, value)
+    assert Stash.exists?(:simple_exists, key)
   end
 
-  test "test key deletion" do
-    Enum.each(1..1000, fn(x) ->
-      assert(Stash.delete(@test_cache, "key#{x}"))
-      assert(Stash.size(@test_cache) == 1000 - x)
-    end)
+  test "simple key increments" do
+    key = "one"
+    key2 = "two"
+
+    assert Stash.set(:simple_increment, key, 1)
+
+    assert Stash.inc(:simple_increment, key) == 2
+    assert Stash.inc(:simple_increment, key, 2) == 4
+
+    assert Stash.inc(:simple_increment, key2, 5, 5) == 10
   end
 
-  test "test empty checking" do
-    assert(!Stash.empty?(@test_cache))
-    assert(Stash.clear(@test_cache))
-    assert(Stash.empty?(@test_cache))
+  test "checking namespace sizes" do
+    key = "one"
+    value = 1
+
+    assert Stash.empty?(:simple_sizing)
+    assert Stash.size(:simple_sizing) == 0
+
+    assert Stash.set(:simple_sizing, key, value)
+    assert Stash.get(:simple_sizing, key) == 1
+
+    refute Stash.empty?(:simple_sizing)
+    assert Stash.size(:simple_sizing) == 1
+
+    assert Stash.empty?(:sizing_simple)
+    assert Stash.size(:sizing_simple) == 0
   end
 
-  test "test key exists" do
-    Enum.each(1..1000, fn(x) ->
-      assert(Stash.exists?(@test_cache, "key#{x}"))
-    end)
-    assert(!Stash.exists?(@test_cache, "key1001"))
-  end
+  test "checking namespace keys" do
+    assert Stash.set(:simple_keys, 1, 1)
+    assert Stash.set(:simple_keys, 2, 2)
+    assert Stash.set(:simple_keys, 3, 3)
 
-  test "test key increment" do
-    assert(Stash.set(@test_cache, "key", 1))
-    assert(Stash.inc(@test_cache, "key") == 2)
-    assert(Stash.inc(@test_cache, "key", 2) == 4)
-    assert(Stash.inc(@test_cache, "keyX", 5, 5) == 10)
-  end
-
-  test "test key list retrieval" do
-    keys = Stash.keys(@test_cache)
-    assert(keys |> Enum.count == 1000)
-  end
-
-  test "test key removal" do
-    Enum.each(1..1000, fn(x) ->
-      assert(Stash.remove(@test_cache, "key#{x}") == "value#{x}")
-      assert(Stash.size(@test_cache) == 1000 - x)
-    end)
-  end
-
-  test "test key being set" do
-    assert(Stash.set(@test_cache, "key", "value"))
-    assert(Stash.get(@test_cache, "key") == "value")
-  end
-
-  test "test size retrieval" do
-    assert(Stash.size(@test_cache) == 1000)
-  end
-
-  test "test clearing" do
-    assert(Stash.size(@test_cache) == 1000)
-    assert(Stash.clear(@test_cache))
-    assert(Stash.size(@test_cache) == 0)
+    assert Enum.sort(Stash.keys(:simple_keys)) == [1, 2, 3]
   end
 
   test "test persistance and loading" do
-    assert(Stash.clear(@test_cache))
-    assert(Stash.empty?(@test_cache))
-    Enum.each(1..5, fn(x) ->
-      Stash.set(@test_cache, "key#{x}", "value#{x}")
+    assert Stash.clear()
+    assert Stash.empty?(:simple_persistence)
+
+    Enum.each(1..5, fn x ->
+      assert Stash.set(:simple_persistence, "key#{x}", "value#{x}")
     end)
-    assert(Stash.size(@test_cache) == 5)
-    assert(Stash.persist(@test_cache, @test_file) == :ok)
 
-    assert(Stash.clear(@test_cache))
-    assert(Stash.empty?(@test_cache))
-    assert(Stash.load(@test_cache, @test_file) == :ok)
-    assert(Stash.size(@test_cache) == 5)
+    assert Stash.size(:simple_persistence) == 5
+    assert Stash.persist("/tmp/stash_test_file") == :ok
+
+    assert Stash.clear()
+    assert Stash.empty?(:simple_persistence)
+
+    assert Stash.load("/tmp/stash_test_file") == :ok
+    assert Stash.size(:simple_persistence) == 5
   end
-
 end

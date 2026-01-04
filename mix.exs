@@ -16,18 +16,18 @@ defmodule Stash.Mixfile do
           "LICENSE",
           "README.md"
         ],
-        licenses: [ "MIT" ],
+        licenses: ["MIT"],
         links: %{
           "Docs" => @url_docs,
           "GitHub" => @url_github
         },
-        maintainers: [ "Isaac Whitfield" ]
+        maintainers: ["Isaac Whitfield"]
       },
       version: "1.0.0",
-      elixir: "~> 1.1",
+      elixir: "~> 1.7",
       deps: deps(),
       docs: [
-        extras: [ "README.md" ],
+        extras: ["README.md"],
         source_ref: "master",
         source_url: @url_github
       ]
@@ -37,9 +37,8 @@ defmodule Stash.Mixfile do
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
-  def application do
-    [applications: [:logger]]
-  end
+  def application,
+    do: [mod: {Stash.App, []}]
 
   # Dependencies can be Hex packages:
   #
@@ -52,13 +51,8 @@ defmodule Stash.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      # documentation
-      { :earmark, "~> 0.2.1",  optional: true, only: :docs },
-      { :ex_doc,  "~> 0.11.3", optional: true, only: :docs },
-      # testing
-      { :benchfella,  "~> 0.3.1", optional: true, only: :test },
-      { :benchwarmer, "~> 0.0.2", optional: true, only: :test },
-      { :exprof,      "~> 0.2.0", optional: true, only: :test }
+      {:eternal, "~> 1.2"},
+      {:ex_doc, "~> 0.29", optional: true, only: :docs}
     ]
   end
 end
